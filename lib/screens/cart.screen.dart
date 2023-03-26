@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../providers/cart.provider.dart';
+import '../widgets/cart_item.dart';
+import '../providers/orders.provider.dart';
+import '../providers/cart.provider.dart' show Cart;
 
 class CartScreen extends StatelessWidget {
   static const routeName = '/cart';
@@ -11,6 +13,7 @@ class CartScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cartProvider = Provider.of<Cart>(context);
+    final ordersProvider = Provider.of<Orders>(context, listen: false);
 
     return Scaffold(
       appBar: AppBar(
@@ -32,19 +35,39 @@ class CartScreen extends StatelessWidget {
                   const Spacer(),
                   Chip(
                     label: Text(
-                      '\$${cartProvider.totalAmount}',
+                      '\$${cartProvider.totalAmount.toStringAsFixed(2)}',
                       style: const TextStyle(color: Colors.white),
                     ),
                     backgroundColor: Theme.of(context).primaryColor,
                   ),
                   TextButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      ordersProvider.addOrder(
+                        cartProvider.cartItems.values.toList(),
+                        cartProvider.totalAmount,
+                      );
+
+                      cartProvider.clearCart();
+                    },
                     child: const Text('ORDER NOW'),
                   ),
                 ],
               ),
             ),
           ),
+          const SizedBox(height: 10),
+          Expanded(
+            child: ListView.builder(
+              itemCount: cartProvider.itemCount,
+              itemBuilder: (ctx, index) => CartItem(
+                cartProvider.cartItems.values.toList()[index].id,
+                cartProvider.cartItems.values.toList()[index].price,
+                cartProvider.cartItems.values.toList()[index].title,
+                cartProvider.cartItems.values.toList()[index].quantity,
+                cartProvider.cartItems.keys.toList()[index],
+              ),
+            ),
+          )
         ],
       ),
     );
