@@ -17,6 +17,16 @@ class _EditProductScreenState extends State<EditProductScreen> {
   final priceFocusNode = FocusNode();
   final descriptionFocusNode = FocusNode();
   final imageURLController = TextEditingController();
+  final form = GlobalKey<FormState>();
+
+  var editedProduct = Product(
+    id: '',
+    title: '',
+    description: '',
+    price: 0,
+    imageUrl: '',
+    isFavorite: false,
+  );
 
   @override
   void dispose() {
@@ -28,13 +38,23 @@ class _EditProductScreenState extends State<EditProductScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // final productId = ModalRoute.of(context)?.settings.arguments as String;
-    // final productProvider = Provider.of<Products>(context, listen: false);
-    // final product = productProvider.findById(productId);
-    final form = GlobalKey<FormState>();
+    final productProvider = Provider.of<Products>(context, listen: false);
+    final productId = ModalRoute.of(context)?.settings.arguments as String?;
 
-    var editedProduct =
-        Product(id: '', title: '', description: '', price: 0, imageUrl: '');
+    if (productId != null) {
+      final product = productProvider.findById(productId);
+
+      editedProduct = Product(
+        id: product.id,
+        title: product.title,
+        description: product.description,
+        price: product.price,
+        imageUrl: product.imageUrl,
+        isFavorite: product.isFavorite,
+      );
+
+      imageURLController.text = editedProduct.imageUrl;
+    }
 
     void saveForm() {
       final isValid = form.currentState!.validate();
@@ -42,6 +62,14 @@ class _EditProductScreenState extends State<EditProductScreen> {
 
       if (form.currentState != null) {
         form.currentState!.save();
+
+        if (editedProduct.id.isEmpty) {
+          productProvider.addProduct(editedProduct);
+        } else {
+          productProvider.updateProduct(editedProduct.id, editedProduct);
+        }
+
+        Navigator.of(context).pop();
       }
     }
 
@@ -61,6 +89,8 @@ class _EditProductScreenState extends State<EditProductScreen> {
               TextFormField(
                 decoration: const InputDecoration(labelText: 'Title'),
                 textInputAction: TextInputAction.next,
+                initialValue: editedProduct.title,
+                onChanged: (value) => print(editedProduct.toString()),
                 onFieldSubmitted: (_) =>
                     FocusScope.of(context).requestFocus(priceFocusNode),
                 onSaved: (value) =>
@@ -76,6 +106,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
               TextFormField(
                 decoration: const InputDecoration(labelText: 'Price'),
                 textInputAction: TextInputAction.next,
+                initialValue: editedProduct.price.toString(),
                 keyboardType: TextInputType.number,
                 onFieldSubmitted: (_) =>
                     FocusScope.of(context).requestFocus(descriptionFocusNode),
@@ -102,6 +133,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                 decoration: const InputDecoration(labelText: 'Description'),
                 maxLines: 3,
                 keyboardType: TextInputType.multiline,
+                initialValue: editedProduct.description,
                 focusNode: descriptionFocusNode,
                 onSaved: (value) =>
                     editedProduct = editedProduct.copyWith(description: value),
@@ -133,8 +165,10 @@ class _EditProductScreenState extends State<EditProductScreen> {
                     child: imageURLController.text.isEmpty
                         ? const Text('Enter an url')
                         : FittedBox(
-                            fit: BoxFit.cover,
-                            child: Image.network(imageURLController.text),
+                            child: Image.network(
+                              imageURLController.text,
+                              fit: BoxFit.cover,
+                            ),
                           ),
                   ),
                   Expanded(

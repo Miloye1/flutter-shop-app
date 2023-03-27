@@ -30,10 +30,17 @@ class Product with ChangeNotifier {
         description: description ?? this.description,
         price: price ?? this.price,
         imageUrl: imageUrl ?? this.imageUrl,
+        isFavorite: isFavorite,
       );
 
   void toggleFavorite() {
     isFavorite = !isFavorite;
     notifyListeners();
+  }
+
+  @override
+  String toString() {
+    print('${id} ${title} ${description} ${price} ${imageUrl}');
+    return super.toString();
   }
 }
