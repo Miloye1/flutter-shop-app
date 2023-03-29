@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../screens/cart.screen.dart';
+import '../providers/products.provider.dart';
 import '../providers/cart.provider.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/product_grid.dart';
@@ -23,6 +24,18 @@ class ProductsOverviewScreen extends StatefulWidget {
 
 class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
   var showFavorites = false;
+  var loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+
+    Provider.of<Products>(context, listen: false).getProducts().then((value) {
+      setState(() {
+        loading = false;
+      });
+    });
+  }
 
   void toggleFavoriteProducts(FilterOptions value) {
     setState(() {
@@ -68,7 +81,11 @@ class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
           ),
         ],
       ),
-      body: ProductGrid(showFavorites),
+      body: loading
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : ProductGrid(showFavorites),
       drawer: const AppDrawer(),
     );
   }
